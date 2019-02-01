@@ -1,0 +1,38 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.example.lishan.lvshikefu"
+        minSdkVersion 15
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    signingConfigs {
+        release {
+            storeFile file('../lvshikefu.jks')
+            storePassword '895977'
+            keyAlias 'key0'
+            keyPassword '895977'
+        }
+        debug {
+            storeFile file('../lvshikefu.jks')
+            storePassword '895977'
+            keyAlias 'key0'
+            keyPassword '895977'
+        }
+    }
+}
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile project(':aextreme')
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+}
