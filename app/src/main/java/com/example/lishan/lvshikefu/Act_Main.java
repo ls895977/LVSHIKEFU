@@ -20,19 +20,31 @@ import android.os.Parcelable;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.ValueCallback;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import com.example.lishan.lvshikefu.permission.RxPermissions;
 import com.example.lishan.lvshikefu.utils.X5WebView;
 import com.lykj.aextreme.afinal.common.BaseActivity;
+import com.lykj.aextreme.afinal.utils.ACache;
+import com.lykj.aextreme.afinal.utils.Debug;
+import com.lykj.aextreme.afinal.utils.MyToast;
+import com.tencent.smtt.sdk.CookieSyncManager;
+import com.tencent.smtt.sdk.WebViewCallbackClient;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.reactivex.functions.Consumer;
 
@@ -44,7 +56,9 @@ public class Act_Main extends BaseActivity {
     private RxPermissions rxPermissions;
     private ValueCallback<Uri> mUploadMessage;// 表单的数据信息
     private ValueCallback<Uri[]> mUploadCallbackAboveL;
-    private String myUrl="https://muser.libawall.com";
+    private String myUrl = "https://muser.libawall.com";
+    private ACache aCache;
+
     @Override
     public int initLayoutId() {
         return R.layout.act_main;
@@ -53,9 +67,13 @@ public class Act_Main extends BaseActivity {
     @Override
     public void initView() {
         hideHeader();
+        aCache = ACache.get(this);
+        if (aCache.getAsString("cookies") != null) {
+//            setCookies(aCache.getAsString("cookies"));
+            synCookies(this, myUrl);
+        }
         rxPermissions = new RxPermissions(this);
-        rxPermissions
-                .request(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.CALL_PHONE)
+        rxPermissions.request(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.CALL_PHONE)
                 .subscribe(new Consumer<Boolean>() {
                     @Override
                     public void accept(Boolean aBoolean) throws Exception {
@@ -70,6 +88,7 @@ public class Act_Main extends BaseActivity {
         mWebView.setContext(this);
         mWebView.loadUrl(myUrl);
         mWebView.getSettings().setJavaScriptEnabled(true);
+//        mWebView.setWebViewClient(client);
         mWebView.setWebChromeClient(new com.tencent.smtt.sdk.WebChromeClient() {
 
             public void openFileChooser(ValueCallback<Uri> uploadMsg) {
@@ -86,6 +105,7 @@ public class Act_Main extends BaseActivity {
                 mUploadMessage = uploadMsg;
                 take();
             }
+
             // For Android  >= 5.0
             public boolean onShowFileChooser(com.tencent.smtt.sdk.WebView webView,
                                              com.tencent.smtt.sdk.ValueCallback<Uri[]> filePathCallback,
@@ -331,16 +351,7 @@ public class Act_Main extends BaseActivity {
     public static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        CookieManager cookieManager = CookieManager.getInstance();
-        String cookieStr = cookieManager.getCookie(getDomain(myUrl));
-        SharedPreferences preferences = getSharedPreferences("cookie", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString("cookies", cookieStr);
-        editor.commit();
-    }
+
     /**
      * 获取URL的域名
      */
@@ -350,5 +361,60 @@ public class Act_Main extends BaseActivity {
             url = url.substring(0, url.indexOf('/'));
         }
         return url;
+    }
+
+    boolean myFinsh = false;
+
+    //使用Webview的时候，返回键没有重写的时候会直接关闭程序，这时候其实我们要其执行的知识回退到上一步的操作
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        //这是一个监听用的按键的方法，keyCode 监听用户的动作，如果是按了返回键，同时Webview要返回的话，WebView执行回退操作，因为mWebView.canGoBack()返回的是一个Boolean类型，所以我们把它返回为true
+        if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.canGoBack()) {
+            mWebView.goBack();
+            myFinsh = false;
+            return true;
+        } else {
+            if (myFinsh) {
+                finish();
+            } else {
+                MyToast.show(context, "您确定要退出App吗？");
+                myFinsh = true;
+                return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+//    private com.tencent.smtt.sdk.WebViewClient client = new com.tencent.smtt.sdk.WebViewClient() {
+//
+//        @Override
+//        public void onPageFinished(com.tencent.smtt.sdk.WebView webView, String url) {
+//            com.tencent.smtt.sdk.CookieManager cookieManager = com.tencent.smtt.sdk.CookieManager.getInstance();
+//            String CookieStr = cookieManager.getCookie(url);
+//            Log.e("------", "Cookies = " + CookieStr);
+//            super.onPageFinished(webView, url);
+//        }
+//    };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        CookieManager cookieManager = CookieManager.getInstance();
+        String cookieStr = cookieManager.getCookie(getDomain(myUrl));
+        Log.e("------", "Cookies = " + cookieStr);
+        aCache.put("cookies", cookieStr);
+    }
+
+    /**
+     * 同步一下cookie
+     */
+    public void synCookies(Context context, String url) {
+        CookieSyncManager.createInstance(context);
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.removeSessionCookie();//移除
+        Debug.e("-----" + aCache.getAsString("cookies"));
+        cookieManager.setCookie(url, aCache.getAsString("cookies"));//cookies是在HttpClient中获得的cookie
+        CookieSyncManager.getInstance().sync();
     }
 }

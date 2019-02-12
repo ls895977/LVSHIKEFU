@@ -1,4 +1,5 @@
 package com.example.lishan.lvshikefu;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -19,6 +20,7 @@ import android.os.Parcelable;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
+import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -29,6 +31,7 @@ import android.widget.Toast;
 
 import com.example.lishan.lvshikefu.permission.RxPermissions;
 import com.lykj.aextreme.afinal.common.BaseActivity;
+import com.lykj.aextreme.afinal.utils.Debug;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,13 +40,14 @@ import java.util.List;
 import io.reactivex.functions.Consumer;
 
 
-public class MainActivity extends BaseActivity{
+public class MainActivity extends BaseActivity {
     private WebView mWebView;
     private Uri imageUri;
     private RxPermissions rxPermissions;
     private ValueCallback<Uri> mUploadMessage;// 表单的数据信息
     private ValueCallback<Uri[]> mUploadCallbackAboveL;
     public static final int FILECHOOSER_RESULTCODE = 5173;
+
     @Override
     public int initLayoutId() {
         return R.layout.activity_main;
@@ -126,6 +130,7 @@ public class MainActivity extends BaseActivity{
             }
         });
     }
+
     private void take() {
         File imageStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyApp");
         // Create the storage directory if it does not exist
@@ -155,6 +160,7 @@ public class MainActivity extends BaseActivity{
         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, cameraIntents.toArray(new Parcelable[]{}));
         MainActivity.this.startActivityForResult(chooserIntent, FILECHOOSER_RESULTCODE);
     }
+
     @Override
     public void initData() {
 
@@ -357,5 +363,6 @@ public class MainActivity extends BaseActivity{
 
         return;
     }
+
 
 }
