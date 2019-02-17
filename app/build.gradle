@@ -10,6 +10,11 @@ android {
         versionName "1.01"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    repositories {
+        // ...
+        maven { url "https://jitpack.io" }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -35,4 +40,5 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile project(':aextreme')
     compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    compile 'com.github.lzyzsd:jsbridge:1.0.4'
 }

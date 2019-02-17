@@ -22,6 +22,7 @@ import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
 import android.view.KeyEvent;
 import android.view.View;
+import android.webkit.CookieManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -30,8 +31,13 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import com.example.lishan.lvshikefu.permission.RxPermissions;
+import com.github.lzyzsd.jsbridge.BridgeHandler;
+import com.github.lzyzsd.jsbridge.BridgeWebView;
+import com.github.lzyzsd.jsbridge.CallBackFunction;
 import com.lykj.aextreme.afinal.common.BaseActivity;
+import com.lykj.aextreme.afinal.utils.ACache;
 import com.lykj.aextreme.afinal.utils.Debug;
+import com.lykj.aextreme.afinal.utils.MyToast;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -41,13 +47,14 @@ import io.reactivex.functions.Consumer;
 
 
 public class MainActivity extends BaseActivity {
-    private WebView mWebView;
+    private BridgeWebView mWebView;
     private Uri imageUri;
     private RxPermissions rxPermissions;
     private ValueCallback<Uri> mUploadMessage;// 表单的数据信息
     private ValueCallback<Uri[]> mUploadCallbackAboveL;
     public static final int FILECHOOSER_RESULTCODE = 5173;
-
+    private ACache aCache;
+    private String myUrl="https://muser.libawall.com";
     @Override
     public int initLayoutId() {
         return R.layout.activity_main;
@@ -56,6 +63,10 @@ public class MainActivity extends BaseActivity {
     @Override
     public void initView() {
         hideHeader();
+        aCache = ACache.get(this);
+        if (aCache.getAsString("cookies") != null) {
+            synCookies(this, myUrl);
+        }
         rxPermissions = new RxPermissions(this);
         rxPermissions
                 .request(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.CALL_PHONE)
@@ -70,7 +81,14 @@ public class MainActivity extends BaseActivity {
                     }
                 });
         mWebView = getView(R.id.webView);
-        mWebView.loadUrl("https://muser.libawall.com");
+        mWebView.loadUrl(myUrl);
+        mWebView.registerHandler("getBlogNameFromObjC", new BridgeHandler() {
+            @Override
+            public void handler(String data, CallBackFunction function) {
+                Toast.makeText(MainActivity.this, "pay--->，" + data, Toast.LENGTH_SHORT).show();
+                function.onCallBack("测试blog");
+            }
+        });
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
         WebSettings settings = mWebView.getSettings();
@@ -129,6 +147,7 @@ public class MainActivity extends BaseActivity {
                 take();
             }
         });
+        mWebView.send("hello");
     }
 
     private void take() {
@@ -365,4 +384,58 @@ public class MainActivity extends BaseActivity {
     }
 
 
+    /**
+     * 同步一下cookie
+     */
+    public void synCookies(Context context, String url) {
+        com.tencent.smtt.sdk.CookieSyncManager.createInstance(context);
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.removeSessionCookie();//移除
+        Debug.e("-----" + aCache.getAsString("cookies"));
+        cookieManager.setCookie(url, aCache.getAsString("cookies"));//cookies是在HttpClient中获得的cookie
+        com.tencent.smtt.sdk.CookieSyncManager.getInstance().sync();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        CookieManager cookieManager = CookieManager.getInstance();
+        String cookieStr = cookieManager.getCookie(getDomain(myUrl));
+        Debug.e("----------+保存的-cookie-" + cookieStr);
+        aCache.put("cookies", cookieStr);
+    }
+
+    /**
+     * 获取URL的域名
+     */
+    private String getDomain(String url) {
+        url = url.replace("http://", "").replace("https://", "");
+        if (url.contains("/")) {
+            url = url.substring(0, url.indexOf('/'));
+        }
+        return url;
+    }
+
+    boolean myFinsh = false;
+
+    //使用Webview的时候，返回键没有重写的时候会直接关闭程序，这时候其实我们要其执行的知识回退到上一步的操作
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        //这是一个监听用的按键的方法，keyCode 监听用户的动作，如果是按了返回键，同时Webview要返回的话，WebView执行回退操作，因为mWebView.canGoBack()返回的是一个Boolean类型，所以我们把它返回为true
+        if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.canGoBack()) {
+            mWebView.goBack();
+            myFinsh = false;
+            return true;
+        } else {
+            if (myFinsh) {
+                finish();
+            } else {
+                MyToast.show(context, "您确定要退出App吗？");
+                myFinsh = true;
+                return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
 }

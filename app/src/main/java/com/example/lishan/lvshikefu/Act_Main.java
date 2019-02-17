@@ -89,6 +89,15 @@ public class Act_Main extends BaseActivity {
         mWebView.loadUrl(myUrl);
         mWebView.getSettings().setJavaScriptEnabled(true);
 //        mWebView.setWebViewClient(client);
+//        mWebView.registerHandler("submitFromWeb", new BridgeHandler() {//订阅
+//            @Override
+//            public void handler(String data, CallBackFunction function) {
+//                if (!TextUtils.isEmpty(data)) {
+//                    mEditText.setText("通过调用Native方法接收数据：\n" + data);
+//                }
+//                function.onCallBack("Native已经接收到数据：" + data + "，请确认！");
+//            }
+//        });
         mWebView.setWebChromeClient(new com.tencent.smtt.sdk.WebChromeClient() {
 
             public void openFileChooser(ValueCallback<Uri> uploadMsg) {
@@ -384,18 +393,6 @@ public class Act_Main extends BaseActivity {
         }
         return super.onKeyDown(keyCode, event);
     }
-
-//    private com.tencent.smtt.sdk.WebViewClient client = new com.tencent.smtt.sdk.WebViewClient() {
-//
-//        @Override
-//        public void onPageFinished(com.tencent.smtt.sdk.WebView webView, String url) {
-//            com.tencent.smtt.sdk.CookieManager cookieManager = com.tencent.smtt.sdk.CookieManager.getInstance();
-//            String CookieStr = cookieManager.getCookie(url);
-//            Log.e("------", "Cookies = " + CookieStr);
-//            super.onPageFinished(webView, url);
-//        }
-//    };
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
