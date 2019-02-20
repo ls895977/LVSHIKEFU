@@ -20,6 +20,7 @@ import android.os.Parcelable;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.CookieManager;
@@ -54,7 +55,9 @@ public class MainActivity extends BaseActivity {
     private ValueCallback<Uri[]> mUploadCallbackAboveL;
     public static final int FILECHOOSER_RESULTCODE = 5173;
     private ACache aCache;
-    private String myUrl="https://muser.libawall.com";
+        private String myUrl="https://muser.libawall.com";
+//    private String myUrl = "http://xmb.xmluma.cn/index.html";
+//      private String myUrl="http://192.168.31.172:8099/index.html";
     @Override
     public int initLayoutId() {
         return R.layout.activity_main;
@@ -82,13 +85,14 @@ public class MainActivity extends BaseActivity {
                 });
         mWebView = getView(R.id.webView);
         mWebView.loadUrl(myUrl);
-        mWebView.registerHandler("getBlogNameFromObjC", new BridgeHandler() {
+        mWebView.registerHandler("finish", new BridgeHandler() {
             @Override
             public void handler(String data, CallBackFunction function) {
-                Toast.makeText(MainActivity.this, "pay--->，" + data, Toast.LENGTH_SHORT).show();
+                finish();
                 function.onCallBack("测试blog");
             }
         });
+        mWebView.send("hello");
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
         WebSettings settings = mWebView.getSettings();
@@ -147,7 +151,6 @@ public class MainActivity extends BaseActivity {
                 take();
             }
         });
-        mWebView.send("hello");
     }
 
     private void take() {
@@ -403,6 +406,10 @@ public class MainActivity extends BaseActivity {
         CookieManager cookieManager = CookieManager.getInstance();
         String cookieStr = cookieManager.getCookie(getDomain(myUrl));
         Debug.e("----------+保存的-cookie-" + cookieStr);
+        if (cookieStr == null || cookieStr.equals("null")) {
+            Debug.e("---cookie-------保存的失败---cookie为null-");
+            return;
+        }
         aCache.put("cookies", cookieStr);
     }
 
@@ -422,20 +429,28 @@ public class MainActivity extends BaseActivity {
     //使用Webview的时候，返回键没有重写的时候会直接关闭程序，这时候其实我们要其执行的知识回退到上一步的操作
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        //这是一个监听用的按键的方法，keyCode 监听用户的动作，如果是按了返回键，同时Webview要返回的话，WebView执行回退操作，因为mWebView.canGoBack()返回的是一个Boolean类型，所以我们把它返回为true
-        if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.canGoBack()) {
-            mWebView.goBack();
-            myFinsh = false;
-            return true;
-        } else {
-            if (myFinsh) {
-                finish();
-            } else {
-                MyToast.show(context, "您确定要退出App吗？");
-                myFinsh = true;
-                return true;
+//        //这是一个监听用的按键的方法，keyCode 监听用户的动作，如果是按了返回键，同时Webview要返回的话，WebView执行回退操作，因为mWebView.canGoBack()返回的是一个Boolean类型，所以我们把它返回为true
+//        if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.canGoBack()) {
+//            mWebView.goBack();
+//            myFinsh = false;
+//            return true;
+//        } else {
+//            if (myFinsh) {
+//                finish();
+//            } else {
+//                MyToast.show(context, "您确定要退出App吗？");
+//                myFinsh = true;
+//                return true;
+//            }
+//        }
+//        return super.onKeyDown(keyCode, event);
+        mWebView.callHandler("goBack", "hello good", new CallBackFunction() {
+            @Override
+            public void onCallBack(String data) {
+                Debug.e("----------发送成功！--" + data);
             }
-        }
-        return super.onKeyDown(keyCode, event);
+        });
+        mWebView.send("hello");
+        return true;
     }
 }
