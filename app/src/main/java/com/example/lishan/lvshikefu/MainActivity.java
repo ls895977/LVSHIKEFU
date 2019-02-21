@@ -16,10 +16,13 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.os.Parcelable;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -31,10 +34,15 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import com.alipay.sdk.app.PayTask;
+import com.example.lishan.lvshikefu.bean.PlayZFBBean;
 import com.example.lishan.lvshikefu.permission.RxPermissions;
+import com.example.lishan.lvshikefu.utils.AuthResult;
+import com.example.lishan.lvshikefu.utils.PayResult;
 import com.github.lzyzsd.jsbridge.BridgeHandler;
 import com.github.lzyzsd.jsbridge.BridgeWebView;
 import com.github.lzyzsd.jsbridge.CallBackFunction;
+import com.google.gson.Gson;
 import com.lykj.aextreme.afinal.common.BaseActivity;
 import com.lykj.aextreme.afinal.utils.ACache;
 import com.lykj.aextreme.afinal.utils.Debug;
@@ -43,6 +51,7 @@ import com.lykj.aextreme.afinal.utils.MyToast;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import io.reactivex.functions.Consumer;
 
@@ -54,10 +63,55 @@ public class MainActivity extends BaseActivity {
     private ValueCallback<Uri> mUploadMessage;// 表单的数据信息
     private ValueCallback<Uri[]> mUploadCallbackAboveL;
     public static final int FILECHOOSER_RESULTCODE = 5173;
-    private String myUrl = "https://muser.libawall.com";//正式地址
+    private String myUrl = "https:///farm.xmluma.cn/";//正式地址
 //          private String myUrl="http://xmb.xmluma.cn";//测试地址
 //private String myUrl = "https://farm.xmluma.cn/";//测试地址2
 //            private String myUrl="http://xmb.xmluma.cn/index2.html";
+
+    private static final int SDK_PAY_FLAG = 1;
+    private static final int SDK_AUTH_FLAG = 2;
+    private Handler mHandler = new Handler() {
+        @SuppressWarnings("unused")
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case SDK_PAY_FLAG: {
+                    @SuppressWarnings("unchecked")
+                    PayResult payResult = new PayResult((Map<String, String>) msg.obj);
+                    /**
+                     * 对于支付结果，请商户依赖服务端的异步通知结果。同步通知结果，仅作为支付结束的通知。
+                     */
+                    String resultInfo = payResult.getResult();// 同步返回需要验证的信息
+                    String resultStatus = payResult.getResultStatus();
+                    // 判断resultStatus 为9000则代表支付成功
+                    if (TextUtils.equals(resultStatus, "9000")) {
+                        // 该笔订单是否真实支付成功，需要依赖服务端的异步通知。
+                        appPlayfunction.onCallBack("9000");
+                    } else {
+                        // 该笔订单真实的支付结果，需要依赖服务端的异步通知。
+                    }
+                    break;
+                }
+                case SDK_AUTH_FLAG: {
+                    @SuppressWarnings("unchecked")
+                    AuthResult authResult = new AuthResult((Map<String, String>) msg.obj, true);
+                    String resultStatus = authResult.getResultStatus();
+                    // 判断resultStatus 为“9000”且result_code
+                    // 为“200”则代表授权成功，具体状态码代表含义可参考授权接口文档
+                    if (TextUtils.equals(resultStatus, "9000") && TextUtils.equals(authResult.getResultCode(), "200")) {
+                        // 获取alipay_open_id，调支付时作为参数extern_token 的value
+                        // 传入，则支付账户为该授权账户
+                    } else {
+                        // 其他状态值则为授权失败
+                        appPlayfunction.onCallBack("100");
+                        Log.e("aa", "-------------其他状态值则为授权失败--");
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    };
 
     @Override
     public int initLayoutId() {
@@ -65,6 +119,7 @@ public class MainActivity extends BaseActivity {
     }
 
     private ACache aCache;
+    private CallBackFunction appPlayfunction;
 
     @Override
     public void initView() {
@@ -95,14 +150,18 @@ public class MainActivity extends BaseActivity {
                 function.onCallBack("测试blog");
             }
         });
-//        mWebView.registerHandler("getBlogNameFromObjC", new BridgeHandler() {
-//            @Override
-//            public void handler(String data, CallBackFunction function) {
-//                Log.e("aa", "----------" + data);
-//                function.onCallBack("测试blog");
-//            }
-//
-//        });
+
+        mWebView.registerHandler("appPay", new BridgeHandler() {
+            @Override
+            public void handler(String data, CallBackFunction function1) {
+                appPlayfunction = function1;
+                Gson gson = new Gson();
+                PlayZFBBean zfbBean = gson.fromJson(data, PlayZFBBean.class);
+                Log.e("aa", "----------" + data);
+                appPlayZFB(zfbBean.getData());
+            }
+
+        });
         mWebView.send("hello");
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
@@ -469,5 +528,26 @@ public class MainActivity extends BaseActivity {
 //        });
         mWebView.send("hello");
         return true;
+    }
+
+    /**
+     * 支付宝支付
+     */
+    public void appPlayZFB(final String Alipay) {
+        final Runnable payRunnable = new Runnable() {
+
+            @Override
+            public void run() {
+                PayTask alipay = new PayTask(MainActivity.this);
+                Map<String, String> result = alipay.payV2(Alipay, true);
+                Message msg = new Message();
+                msg.what = SDK_PAY_FLAG;
+                msg.obj = result;
+                mHandler.sendMessage(msg);
+            }
+        };
+        // 必须异步调用
+        Thread payThread = new Thread(payRunnable);
+        payThread.start();
     }
 }
