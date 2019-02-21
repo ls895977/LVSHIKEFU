@@ -54,14 +54,16 @@ public class MainActivity extends BaseActivity {
     private ValueCallback<Uri> mUploadMessage;// 表单的数据信息
     private ValueCallback<Uri[]> mUploadCallbackAboveL;
     public static final int FILECHOOSER_RESULTCODE = 5173;
-    private String myUrl = "http://muser.libawall.com";//正式地址
+    private String myUrl = "https://muser.libawall.com";//正式地址
 //          private String myUrl="http://xmb.xmluma.cn";//测试地址
+//private String myUrl = "https://farm.xmluma.cn/";//测试地址2
 //            private String myUrl="http://xmb.xmluma.cn/index2.html";
 
     @Override
     public int initLayoutId() {
         return R.layout.activity_main;
     }
+
     private ACache aCache;
 
     @Override
