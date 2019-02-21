@@ -54,14 +54,15 @@ public class MainActivity extends BaseActivity {
     private ValueCallback<Uri> mUploadMessage;// 表单的数据信息
     private ValueCallback<Uri[]> mUploadCallbackAboveL;
     public static final int FILECHOOSER_RESULTCODE = 5173;
-    private ACache aCache;
-        private String myUrl="https://muser.libawall.com";
-//    private String myUrl = "http://xmb.xmluma.cn/index.html";
-//      private String myUrl="http://192.168.31.172:8099/index.html";
+    private String myUrl = "http://muser.libawall.com";//正式地址
+//          private String myUrl="http://xmb.xmluma.cn";//测试地址
+//            private String myUrl="http://xmb.xmluma.cn/index2.html";
+
     @Override
     public int initLayoutId() {
         return R.layout.activity_main;
     }
+    private ACache aCache;
 
     @Override
     public void initView() {
@@ -92,6 +93,14 @@ public class MainActivity extends BaseActivity {
                 function.onCallBack("测试blog");
             }
         });
+//        mWebView.registerHandler("getBlogNameFromObjC", new BridgeHandler() {
+//            @Override
+//            public void handler(String data, CallBackFunction function) {
+//                Log.e("aa", "----------" + data);
+//                function.onCallBack("测试blog");
+//            }
+//
+//        });
         mWebView.send("hello");
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
@@ -100,31 +109,31 @@ public class MainActivity extends BaseActivity {
         settings.setLoadWithOverviewMode(true);
         settings.setJavaScriptEnabled(true);
         settings.setSupportZoom(true);
-        mWebView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url.startsWith("http:") || url.startsWith("https:")) {
-                    view.loadUrl(url);
-                    return false;
-                } else {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    startActivity(intent);
-                    return true;
-                }
-            }
-
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                // TODO Auto-generated method stub
-                super.onPageStarted(view, url, favicon);
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                // TODO Auto-generated method stub
-                super.onPageFinished(view, url);
-            }
-        });
+//        mWebView.setWebViewClient(new WebViewClient() {
+//            @Override
+//            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+//                if (url.startsWith("http:") || url.startsWith("https:")) {
+//                    view.loadUrl(url);
+//                    return false;
+//                } else {
+//                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+//                    startActivity(intent);
+//                    return true;
+//                }
+//            }
+//
+//            @Override
+//            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+//                // TODO Auto-generated method stub
+//                super.onPageStarted(view, url, favicon);
+//            }
+//
+//            @Override
+//            public void onPageFinished(WebView view, String url) {
+//                // TODO Auto-generated method stub
+//                super.onPageFinished(view, url);
+//            }
+//        });
         mWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onShowFileChooser(WebView webView,
@@ -450,6 +459,12 @@ public class MainActivity extends BaseActivity {
                 Debug.e("----------发送成功！--" + data);
             }
         });
+//        mWebView.callHandler("getUserInfos", "hello good", new CallBackFunction() {
+//            @Override
+//            public void onCallBack(String data) {
+//                Log.e("aa", "----------发送成功！--" + data);
+//            }
+//        });
         mWebView.send("hello");
         return true;
     }
