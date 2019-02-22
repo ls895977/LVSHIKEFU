@@ -498,8 +498,6 @@ public class MainActivity extends BaseActivity {
         return url;
     }
 
-    boolean myFinsh = false;
-
     //使用Webview的时候，返回键没有重写的时候会直接关闭程序，这时候其实我们要其执行的知识回退到上一步的操作
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -507,34 +505,13 @@ public class MainActivity extends BaseActivity {
             mWebView.callHandler("goBack", "hello good", new CallBackFunction() {
                 @Override
                 public void onCallBack(String data) {
+                    Debug.e("-------触发成功");
                 }
             });
             mWebView.send("hello");
-
         } else {
             mWebView.goBack();
         }
-//        //这是一个监听用的按键的方法，keyCode 监听用户的动作，如果是按了返回键，同时Webview要返回的话，WebView执行回退操作，因为mWebView.canGoBack()返回的是一个Boolean类型，所以我们把它返回为true
-//        if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.canGoBack()) {
-//            mWebView.goBack();
-//            myFinsh = false;
-//            return true;
-//        } else {
-//            if (myFinsh) {
-//                finish();
-//            } else {
-//                MyToast.show(context, "您确定要退出App吗？");
-//                myFinsh = true;
-//                return true;
-//            }
-//        }
-//        return super.onKeyDown(keyCode, event);
-//        mWebView.callHandler("getUserInfos", "hello good", new CallBackFunction() {
-//            @Override
-//            public void onCallBack(String data) {
-//                Log.e("aa", "----------发送成功！--" + data);
-//            }
-//        });
         return true;
     }
 
