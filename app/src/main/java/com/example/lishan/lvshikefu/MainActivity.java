@@ -501,7 +501,7 @@ public class MainActivity extends BaseActivity {
     //使用Webview的时候，返回键没有重写的时候会直接关闭程序，这时候其实我们要其执行的知识回退到上一步的操作
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (mWebView.getUrl().contains("farm.xmluma")) {
+        if (mWebView.getUrl().contains("muser.libawall")) {
             mWebView.callHandler("goBack", "hello good", new CallBackFunction() {
                 @Override
                 public void onCallBack(String data) {
