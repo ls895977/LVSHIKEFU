@@ -63,7 +63,7 @@ public class MainActivity extends BaseActivity {
     private ValueCallback<Uri> mUploadMessage;// 表单的数据信息
     private ValueCallback<Uri[]> mUploadCallbackAboveL;
     public static final int FILECHOOSER_RESULTCODE = 5173;
-    private String myUrl = "https:///farm.xmluma.cn/";//正式地址
+    private String myUrl = "https://farm.xmluma.cn/";//正式地址
 //          private String myUrl="http://xmb.xmluma.cn";//测试地址
 //private String myUrl = "https://farm.xmluma.cn/";//测试地址2
 //            private String myUrl="http://xmb.xmluma.cn/index2.html";
@@ -84,13 +84,13 @@ public class MainActivity extends BaseActivity {
                     String resultStatus = payResult.getResultStatus();
                     // 判断resultStatus 为9000则代表支付成功
                     if (TextUtils.equals(resultStatus, "9000")) {
-                        Debug.e( "----11----则支付账户为该授权账户-------"+resultStatus);
+                        Debug.e("----11----则支付账户为该授权账户-------" + resultStatus);
                         // 该笔订单是否真实支付成功，需要依赖服务端的异步通知。
                         appPlayfunction.onCallBack("9000");
                         appPlayfunction.onCallBack(resultStatus);
                     } else {
                         // 该笔订单真实的支付结果，需要依赖服务端的异步通知。
-                        Debug.e( "-----22---则支付账户为该授权账户-------"+resultStatus);
+                        Debug.e("-----22---则支付账户为该授权账户-------" + resultStatus);
                         appPlayfunction.onCallBack(resultStatus);
                     }
                     break;
@@ -104,17 +104,17 @@ public class MainActivity extends BaseActivity {
                     if (TextUtils.equals(resultStatus, "9000") && TextUtils.equals(authResult.getResultCode(), "200")) {
                         // 获取alipay_open_id，调支付时作为参数extern_token 的value
                         // 传入，则支付账户为该授权账户
-                        Debug.e( "------33--则支付账户为该授权账户-------"+authResult.getResultCode());
+                        Debug.e("------33--则支付账户为该授权账户-------" + authResult.getResultCode());
                         appPlayfunction.onCallBack(authResult.getResultCode());
                     } else {
                         // 其他状态值则为授权失败
                         appPlayfunction.onCallBack(authResult.getResultCode());
-                        Debug.e( "---------44----其他状态值则为授权失败--"+authResult.getResultCode());
+                        Debug.e("---------44----其他状态值则为授权失败--" + authResult.getResultCode());
                     }
                     break;
                 }
                 default:
-                    Debug.e( "---------55----其他状态值则为授权失败--");
+                    Debug.e("---------55----其他状态值则为授权失败--");
                     break;
             }
         }
@@ -507,6 +507,17 @@ public class MainActivity extends BaseActivity {
     //使用Webview的时候，返回键没有重写的时候会直接关闭程序，这时候其实我们要其执行的知识回退到上一步的操作
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (mWebView.getUrl().contains("farm.xmluma")) {
+            mWebView.callHandler("goBack", "hello good", new CallBackFunction() {
+                @Override
+                public void onCallBack(String data) {
+                }
+            });
+            mWebView.send("hello");
+
+        } else {
+            mWebView.goBack();
+        }
 //        //这是一个监听用的按键的方法，keyCode 监听用户的动作，如果是按了返回键，同时Webview要返回的话，WebView执行回退操作，因为mWebView.canGoBack()返回的是一个Boolean类型，所以我们把它返回为true
 //        if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.canGoBack()) {
 //            mWebView.goBack();
@@ -522,19 +533,12 @@ public class MainActivity extends BaseActivity {
 //            }
 //        }
 //        return super.onKeyDown(keyCode, event);
-        mWebView.callHandler("goBack", "hello good", new CallBackFunction() {
-            @Override
-            public void onCallBack(String data) {
-                Debug.e("----------发送成功！--" + data);
-            }
-        });
 //        mWebView.callHandler("getUserInfos", "hello good", new CallBackFunction() {
 //            @Override
 //            public void onCallBack(String data) {
 //                Log.e("aa", "----------发送成功！--" + data);
 //            }
 //        });
-        mWebView.send("hello");
         return true;
     }
 
