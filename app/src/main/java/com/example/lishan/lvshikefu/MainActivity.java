@@ -84,10 +84,14 @@ public class MainActivity extends BaseActivity {
                     String resultStatus = payResult.getResultStatus();
                     // 判断resultStatus 为9000则代表支付成功
                     if (TextUtils.equals(resultStatus, "9000")) {
+                        Debug.e( "----11----则支付账户为该授权账户-------"+resultStatus);
                         // 该笔订单是否真实支付成功，需要依赖服务端的异步通知。
                         appPlayfunction.onCallBack("9000");
+                        appPlayfunction.onCallBack(resultStatus);
                     } else {
                         // 该笔订单真实的支付结果，需要依赖服务端的异步通知。
+                        Debug.e( "-----22---则支付账户为该授权账户-------"+resultStatus);
+                        appPlayfunction.onCallBack(resultStatus);
                     }
                     break;
                 }
@@ -100,14 +104,17 @@ public class MainActivity extends BaseActivity {
                     if (TextUtils.equals(resultStatus, "9000") && TextUtils.equals(authResult.getResultCode(), "200")) {
                         // 获取alipay_open_id，调支付时作为参数extern_token 的value
                         // 传入，则支付账户为该授权账户
+                        Debug.e( "------33--则支付账户为该授权账户-------"+authResult.getResultCode());
+                        appPlayfunction.onCallBack(authResult.getResultCode());
                     } else {
                         // 其他状态值则为授权失败
-                        appPlayfunction.onCallBack("100");
-                        Log.e("aa", "-------------其他状态值则为授权失败--");
+                        appPlayfunction.onCallBack(authResult.getResultCode());
+                        Debug.e( "---------44----其他状态值则为授权失败--"+authResult.getResultCode());
                     }
                     break;
                 }
                 default:
+                    Debug.e( "---------55----其他状态值则为授权失败--");
                     break;
             }
         }
@@ -156,9 +163,10 @@ public class MainActivity extends BaseActivity {
             public void handler(String data, CallBackFunction function1) {
                 appPlayfunction = function1;
                 Gson gson = new Gson();
+//                String datas="alipay_sdk=alipay-sdk-php-20180705&app_id=2018121062529203&biz_content=%7B%22body%22%3A%22yyyyyiii_13212345678%22%2C%22subject%22%3A+%22yyyyyiii_13212345678%22%2C%22out_trade_no%22%3A+%222019022210350456541025%22%2C%22timeout_express%22%3A+%2230m%22%2C%22total_amount%22%3A+%220.01%22%2C%22product_code%22%3A%22QUICK_MSECURITY_PAY%22%7D&charset=UTF-8&format=json&method=alipay.trade.app.pay&notify_url=http%3A%2F%2Fliuzhi.365hy.com%2Fapi%2Findex%2Falipaycallback.html&sign_type=RSA2&timestamp=2019-02-22+10%3A36%3A09&version=1.0&sign=VCa8WDEQI4ETB1G4Rjw88RzDayKa103Pz3LDhY0sqThT10zWSViLbP%2FocxPlTSvCjV3cCLL%2B3NOXXn5SPmO9ujKWD3Qk9SpEbo366K2Lfso67TLnJFDykGGNxXc88tEeKthK8R8%2BXk8plGEpxfxQLQvrvlhDJlb%2FHoZVsQ4pVAa0gFGUC3mo%2FTKR2I4JJBm3RilaKYvA4EslWR%2FmUvpTVJyEAVWSnJ%2BUgu8NvvFqMfuz%2BAjJglSL1tbz96Nj4lQ04AaEyv1OVCh8SEEMFTbsYPsVmPcYdoNPXjGHRzRhGyzgO55OQnFCgRJnwtCMog3Cf2a6ywbZkX8mkktWpjVSpQ%3D%3D";
                 PlayZFBBean zfbBean = gson.fromJson(data, PlayZFBBean.class);
-                Log.e("aa", "----------" + data);
                 appPlayZFB(zfbBean.getData());
+//                appPlayZFB(datas);
             }
 
         });
