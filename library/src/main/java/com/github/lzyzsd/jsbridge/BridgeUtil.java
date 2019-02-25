@@ -15,7 +15,7 @@ public class BridgeUtil {
 	final static String EMPTY_STR = "";
 	final static String UNDERLINE_STR = "_";
 	final static String SPLIT_MARK = "/";
-	
+
 	final static String CALLBACK_ID_FORMAT = "JAVA_CB_%s";
 	final static String JS_HANDLE_MESSAGE_FROM_JAVA = "javascript:WebViewJavascriptBridge._handleMessageFromNative('%s');";
 	final static String JS_FETCH_QUEUE_FROM_JAVA = "javascript:WebViewJavascriptBridge._fetchQueue();";
@@ -62,8 +62,8 @@ public class BridgeUtil {
 		return null;
 	}
 
-	
-	
+
+
 	/**
 	 * js 文件将注入为第一个script引用
 	 * @param view WebView
@@ -108,7 +108,7 @@ public class BridgeUtil {
 
             bufferedReader.close();
             in.close();
- 
+
             return sb.toString();
 		} catch (Exception e) {
 			e.printStackTrace();

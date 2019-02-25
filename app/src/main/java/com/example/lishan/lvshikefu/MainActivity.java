@@ -39,6 +39,8 @@ import com.example.lishan.lvshikefu.bean.PlayZFBBean;
 import com.example.lishan.lvshikefu.permission.RxPermissions;
 import com.example.lishan.lvshikefu.utils.AuthResult;
 import com.example.lishan.lvshikefu.utils.PayResult;
+import com.example.lishan.lvshikefu.view.MyChromeClient;
+import com.example.lishan.lvshikefu.view.MyWebViewClient;
 import com.github.lzyzsd.jsbridge.BridgeHandler;
 import com.github.lzyzsd.jsbridge.BridgeWebView;
 import com.github.lzyzsd.jsbridge.CallBackFunction;
@@ -174,57 +176,34 @@ public class MainActivity extends BaseActivity {
         settings.setLoadWithOverviewMode(true);
         settings.setJavaScriptEnabled(true);
         settings.setSupportZoom(true);
-//        mWebView.setWebViewClient(new WebViewClient() {
+            mWebView.setWebViewClient(new MyWebViewClient(mWebView,this));
+            mWebView.setWebChromeClient(new MyChromeClient(this));
+//        mWebView.setWebChromeClient(new WebChromeClient() {
 //            @Override
-//            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-//                if (url.startsWith("http:") || url.startsWith("https:")) {
-//                    view.loadUrl(url);
-//                    return false;
-//                } else {
-//                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-//                    startActivity(intent);
-//                    return true;
-//                }
+//            public boolean onShowFileChooser(WebView webView,
+//                                             ValueCallback<Uri[]> filePathCallback,
+//                                             FileChooserParams fileChooserParams) {
+//                mUploadCallbackAboveL = filePathCallback;
+//                take();
+//                return true;
 //            }
 //
-//            @Override
-//            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-//                // TODO Auto-generated method stub
-//                super.onPageStarted(view, url, favicon);
+//
+//            public void openFileChooser(ValueCallback<Uri> uploadMsg) {
+//                mUploadMessage = uploadMsg;
+//                take();
 //            }
 //
-//            @Override
-//            public void onPageFinished(WebView view, String url) {
-//                // TODO Auto-generated method stub
-//                super.onPageFinished(view, url);
+//            public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType) {
+//                mUploadMessage = uploadMsg;
+//                take();
+//            }
+//
+//            public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture) {
+//                mUploadMessage = uploadMsg;
+//                take();
 //            }
 //        });
-        mWebView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public boolean onShowFileChooser(WebView webView,
-                                             ValueCallback<Uri[]> filePathCallback,
-                                             FileChooserParams fileChooserParams) {
-                mUploadCallbackAboveL = filePathCallback;
-                take();
-                return true;
-            }
-
-
-            public void openFileChooser(ValueCallback<Uri> uploadMsg) {
-                mUploadMessage = uploadMsg;
-                take();
-            }
-
-            public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType) {
-                mUploadMessage = uploadMsg;
-                take();
-            }
-
-            public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture) {
-                mUploadMessage = uploadMsg;
-                take();
-            }
-        });
     }
 
     private void take() {

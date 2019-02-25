@@ -36,13 +36,6 @@ public class MyChromeClient extends WebChromeClient {
         super.onProgressChanged(view, newProgress);
 
     }
-
-
-
-    // <input type="file" name="fileField" id="fileField" />
-
-    // Android > 4.1.1
-
     @Override
     public boolean onShowFileChooser(WebView webView,
                                      ValueCallback<Uri[]> filePathCallback,

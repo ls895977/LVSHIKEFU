@@ -81,7 +81,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge{
      * 获取到CallBackFunction data执行调用并且从数据集移除
      * @param url
      */
-	void handlerReturnData(String url) {
+	public void handlerReturnData(String url) {
 		String functionName = BridgeUtil.getFunctionFromReturnUrl(url);
 		CallBackFunction f = responseCallbacks.get(functionName);
 		String data = BridgeUtil.getDataFromReturnUrl(url);
@@ -140,7 +140,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge{
      * 分发message 必须在主线程才分发成功
      * @param m Message
      */
-	void dispatchMessage(Message m) {
+	public void dispatchMessage(Message m) {
         String messageJson = m.toJson();
         //escape special characters for json string  为json字符串转义特殊字符
         messageJson = messageJson.replaceAll("(\\\\)([^utrn])", "\\\\\\\\$1$2");
@@ -159,7 +159,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge{
     /**
      * 刷新消息队列
      */
-	void flushMessageQueue() {
+	public void flushMessageQueue() {
 		if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
 			loadUrl(BridgeUtil.JS_FETCH_QUEUE_FROM_JAVA, new CallBackFunction() {
 
