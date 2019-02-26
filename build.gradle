@@ -5,7 +5,6 @@ buildscript {
     repositories {
         google()
         jcenter()
-        maven { url "https://jitpack.io" }
     }
 
     dependencies {
@@ -16,9 +15,14 @@ buildscript {
 }
 
 allprojects {
+
     repositories {
-        google()
+        // 支付宝 SDK AAR 包所需的配置
+        flatDir {
+            dirs 'libs'
+        }
         jcenter()
+        google()
     }
 }
 
