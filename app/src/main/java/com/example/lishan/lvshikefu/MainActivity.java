@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -23,7 +22,6 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.CookieManager;
@@ -31,7 +29,6 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import com.alipay.sdk.app.PayTask;
@@ -39,7 +36,6 @@ import com.example.lishan.lvshikefu.bean.PlayZFBBean;
 import com.example.lishan.lvshikefu.permission.RxPermissions;
 import com.example.lishan.lvshikefu.utils.AuthResult;
 import com.example.lishan.lvshikefu.utils.PayResult;
-import com.example.lishan.lvshikefu.view.MyChromeClient;
 import com.example.lishan.lvshikefu.view.MyWebViewClient;
 import com.github.lzyzsd.jsbridge.BridgeHandler;
 import com.github.lzyzsd.jsbridge.BridgeWebView;
@@ -48,7 +44,6 @@ import com.google.gson.Gson;
 import com.lykj.aextreme.afinal.common.BaseActivity;
 import com.lykj.aextreme.afinal.utils.ACache;
 import com.lykj.aextreme.afinal.utils.Debug;
-import com.lykj.aextreme.afinal.utils.MyToast;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -177,33 +172,32 @@ public class MainActivity extends BaseActivity {
         settings.setJavaScriptEnabled(true);
         settings.setSupportZoom(true);
             mWebView.setWebViewClient(new MyWebViewClient(mWebView,this));
-            mWebView.setWebChromeClient(new MyChromeClient(this));
-//        mWebView.setWebChromeClient(new WebChromeClient() {
-//            @Override
-//            public boolean onShowFileChooser(WebView webView,
-//                                             ValueCallback<Uri[]> filePathCallback,
-//                                             FileChooserParams fileChooserParams) {
-//                mUploadCallbackAboveL = filePathCallback;
-//                take();
-//                return true;
-//            }
-//
-//
-//            public void openFileChooser(ValueCallback<Uri> uploadMsg) {
-//                mUploadMessage = uploadMsg;
-//                take();
-//            }
-//
-//            public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType) {
-//                mUploadMessage = uploadMsg;
-//                take();
-//            }
-//
-//            public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture) {
-//                mUploadMessage = uploadMsg;
-//                take();
-//            }
-//        });
+        mWebView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView webView,
+                                             ValueCallback<Uri[]> filePathCallback,
+                                             FileChooserParams fileChooserParams) {
+                mUploadCallbackAboveL = filePathCallback;
+                take();
+                return true;
+            }
+
+
+            public void openFileChooser(ValueCallback<Uri> uploadMsg) {
+                mUploadMessage = uploadMsg;
+                take();
+            }
+
+            public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType) {
+                mUploadMessage = uploadMsg;
+                take();
+            }
+
+            public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture) {
+                mUploadMessage = uploadMsg;
+                take();
+            }
+        });
     }
 
     private void take() {
@@ -214,7 +208,6 @@ public class MainActivity extends BaseActivity {
         }
         File file = new File(imageStorageDir + File.separator + "IMG_" + String.valueOf(System.currentTimeMillis()) + ".jpg");
         imageUri = Uri.fromFile(file);
-
         final List<Intent> cameraIntents = new ArrayList<Intent>();
         final Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         final PackageManager packageManager = getPackageManager();
