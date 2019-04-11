@@ -221,9 +221,9 @@ public class MainActivity extends BaseActivity {
             cameraIntents.add(i);
 
         }
-        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-        i.addCategory(Intent.CATEGORY_OPENABLE);
-        i.setType("image/*");
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);//相册
+//        i.addCategory(Intent.CATEGORY_OPENABLE);
+//        i.setType("image/*");
         Intent chooserIntent = Intent.createChooser(i, "Image Chooser");
         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, cameraIntents.toArray(new Parcelable[]{}));
         MainActivity.this.startActivityForResult(chooserIntent, FILECHOOSER_RESULTCODE);
