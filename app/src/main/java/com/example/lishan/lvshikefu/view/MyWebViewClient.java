@@ -5,15 +5,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
-import android.webkit.CookieManager;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
-
-import com.github.lzyzsd.jsbridge.BridgeUtil;
 import com.github.lzyzsd.jsbridge.BridgeWebView;
 import com.github.lzyzsd.jsbridge.BridgeWebViewClient;
-import com.github.lzyzsd.jsbridge.Message;
-import com.lykj.aextreme.afinal.utils.Debug;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -21,9 +16,10 @@ import java.net.URLDecoder;
 public class MyWebViewClient extends BridgeWebViewClient {
     BridgeWebView webView;
     private Activity activity;
-
-    public MyWebViewClient(BridgeWebView webView1, Activity activity1) {
+    private backWebviewStatus backWebviewStatus;
+    public MyWebViewClient(BridgeWebView webView1, Activity activity1, backWebviewStatus backWebviewStatus1) {
         super(webView1);
+        backWebviewStatus = backWebviewStatus1;
         webView = webView1;
         activity = activity1;
     }
@@ -38,6 +34,22 @@ public class MyWebViewClient extends BridgeWebViewClient {
             activity.startActivity(intent);
         }
         return false;
+    }
+
+    @Override
+    public void onPageFinished(WebView view, String url) {
+        super.onPageFinished(view, url);
+        if (!isLoadError) {
+            backWebviewStatus.LoadSuccess();
+        }
+
+    }
+    private boolean isLoadError;
+    @Override
+    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+        super.onReceivedError(view, errorCode, description, failingUrl);
+        isLoadError = true;
+        backWebviewStatus.onWebErro();
     }
 
     // 增加shouldOverrideUrlLoading在api》=24时
@@ -67,4 +79,8 @@ public class MyWebViewClient extends BridgeWebViewClient {
     final static String YY_OVERRIDE_SCHEMA = "yy://";
     final static String YY_RETURN_DATA = YY_OVERRIDE_SCHEMA + "return/";//格式为   yy://return/{function}/returncontent
 
+    public interface backWebviewStatus {
+        void onWebErro();
+        void LoadSuccess();
+    }
 }

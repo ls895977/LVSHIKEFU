@@ -22,6 +22,7 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.CookieManager;
@@ -29,10 +30,12 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.alipay.sdk.app.PayTask;
 import com.example.lishan.lvshikefu.bean.PlayZFBBean;
+import com.example.lishan.lvshikefu.dialog.Dlg_Photograph;
 import com.example.lishan.lvshikefu.permission.RxPermissions;
 import com.example.lishan.lvshikefu.utils.AuthResult;
 import com.example.lishan.lvshikefu.utils.PayResult;
@@ -44,6 +47,7 @@ import com.google.gson.Gson;
 import com.lykj.aextreme.afinal.common.BaseActivity;
 import com.lykj.aextreme.afinal.utils.ACache;
 import com.lykj.aextreme.afinal.utils.Debug;
+import com.lykj.aextreme.afinal.utils.MyToast;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -53,7 +57,7 @@ import java.util.Map;
 import io.reactivex.functions.Consumer;
 
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements MyWebViewClient.backWebviewStatus {
     private BridgeWebView mWebView;
     private Uri imageUri;
     private RxPermissions rxPermissions;
@@ -120,11 +124,99 @@ public class MainActivity extends BaseActivity {
 
     private ACache aCache;
     private CallBackFunction appPlayfunction;
+    private Dlg_Photograph photograph;
+    private LinearLayout lljiazai;
 
     @Override
     public void initView() {
         hideHeader();
+        lljiazai = getViewAndClick(R.id.jiazaill);
         aCache = ACache.get(this);
+        updateUI();
+    }
+
+    /**
+     * 老选择方式
+     */
+    private void take() {
+        File imageStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyApp");
+        // Create the storage directory if it does not exist
+        if (!imageStorageDir.exists()) {
+            imageStorageDir.mkdirs();
+        }
+        File file = new File(imageStorageDir + File.separator + "IMG_" + String.valueOf(System.currentTimeMillis()) + ".jpg");
+        imageUri = Uri.fromFile(file);
+        final List<Intent> cameraIntents = new ArrayList<>();
+        final Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        final PackageManager packageManager = getPackageManager();
+        final List<ResolveInfo> listCam = packageManager.queryIntentActivities(captureIntent, 0);
+        for (ResolveInfo res : listCam) {
+            final String packageName = res.activityInfo.packageName;
+            final Intent i = new Intent(captureIntent);
+            i.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
+            i.setPackage(packageName);
+            i.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+            cameraIntents.add(i);
+        }
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);//相册
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("image/*");
+        Intent chooserIntent = Intent.createChooser(i, "Image Chooser");
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, cameraIntents.toArray(new Parcelable[]{}));
+        MainActivity.this.startActivityForResult(chooserIntent, FILECHOOSER_RESULTCODE);
+    }
+
+    /**
+     * 直接拍照
+     */
+    public void Photograph() {
+        File imageStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyApp");
+        if (!imageStorageDir.exists()) {
+            imageStorageDir.mkdirs();
+        }
+        File file = new File(imageStorageDir + File.separator + "IMG_" + String.valueOf(System.currentTimeMillis()) + ".jpg");
+        imageUri = Uri.fromFile(file);
+        final List<Intent> cameraIntents = new ArrayList<>();
+        final Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        final PackageManager packageManager = getPackageManager();
+        final List<ResolveInfo> listCam = packageManager.queryIntentActivities(captureIntent, 0);
+        final String packageName = listCam.get(0).activityInfo.packageName;
+        final Intent intent = new Intent(captureIntent);
+        intent.setComponent(new ComponentName(packageName, listCam.get(0).activityInfo.name));
+        intent.setPackage(packageName);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+        cameraIntents.add(intent);
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+        Intent chooserIntent = Intent.createChooser(i, "Image Chooser");
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, cameraIntents.toArray(new Parcelable[]{}));
+        MainActivity.this.startActivityForResult(chooserIntent, FILECHOOSER_RESULTCODE);
+    }
+
+    /**
+     * 选择相册
+     */
+    public void photoAlbum() {
+        final List<Intent> cameraIntents = new ArrayList<>();
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);//相册
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("image/*");
+        Intent chooserIntent = Intent.createChooser(i, "Image Chooser");
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, cameraIntents.toArray(new Parcelable[]{}));
+        MainActivity.this.startActivityForResult(chooserIntent, FILECHOOSER_RESULTCODE);
+    }
+
+    @Override
+    public void initData() {
+
+    }
+
+    @Override
+    public void requestData() {
+
+    }
+
+    @Override
+    public void updateUI() {
         if (aCache.getAsString("cookies") != null) {
             synCookies(this, myUrl);
         }
@@ -156,10 +248,8 @@ public class MainActivity extends BaseActivity {
             public void handler(String data, CallBackFunction function1) {
                 appPlayfunction = function1;
                 Gson gson = new Gson();
-//                String datas="alipay_sdk=alipay-sdk-php-20180705&app_id=2018121062529203&biz_content=%7B%22body%22%3A%22yyyyyiii_13212345678%22%2C%22subject%22%3A+%22yyyyyiii_13212345678%22%2C%22out_trade_no%22%3A+%222019022210350456541025%22%2C%22timeout_express%22%3A+%2230m%22%2C%22total_amount%22%3A+%220.01%22%2C%22product_code%22%3A%22QUICK_MSECURITY_PAY%22%7D&charset=UTF-8&format=json&method=alipay.trade.app.pay&notify_url=http%3A%2F%2Fliuzhi.365hy.com%2Fapi%2Findex%2Falipaycallback.html&sign_type=RSA2&timestamp=2019-02-22+10%3A36%3A09&version=1.0&sign=VCa8WDEQI4ETB1G4Rjw88RzDayKa103Pz3LDhY0sqThT10zWSViLbP%2FocxPlTSvCjV3cCLL%2B3NOXXn5SPmO9ujKWD3Qk9SpEbo366K2Lfso67TLnJFDykGGNxXc88tEeKthK8R8%2BXk8plGEpxfxQLQvrvlhDJlb%2FHoZVsQ4pVAa0gFGUC3mo%2FTKR2I4JJBm3RilaKYvA4EslWR%2FmUvpTVJyEAVWSnJ%2BUgu8NvvFqMfuz%2BAjJglSL1tbz96Nj4lQ04AaEyv1OVCh8SEEMFTbsYPsVmPcYdoNPXjGHRzRhGyzgO55OQnFCgRJnwtCMog3Cf2a6ywbZkX8mkktWpjVSpQ%3D%3D";
                 PlayZFBBean zfbBean = gson.fromJson(data, PlayZFBBean.class);
                 appPlayZFB(zfbBean.getData());
-//                appPlayZFB(datas);
             }
 
         });
@@ -171,82 +261,43 @@ public class MainActivity extends BaseActivity {
         settings.setLoadWithOverviewMode(true);
         settings.setJavaScriptEnabled(true);
         settings.setSupportZoom(true);
-            mWebView.setWebViewClient(new MyWebViewClient(mWebView,this));
+        mWebView.setWebViewClient(new MyWebViewClient(mWebView, this, MainActivity.this));
+        //拍照相册回调
+        photograph = new Dlg_Photograph(this, new Dlg_Photograph.OnClick() {
+            @Override
+            public void PhotographBack() {
+                Photograph();
+            }
+
+            @Override
+            public void photoAlbumBack() {
+                photoAlbum();
+            }
+
+            @Override
+            public void onCancle() {
+                mUploadCallbackAboveL.onReceiveValue(results);
+            }
+        });
         mWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onShowFileChooser(WebView webView,
                                              ValueCallback<Uri[]> filePathCallback,
                                              FileChooserParams fileChooserParams) {
                 mUploadCallbackAboveL = filePathCallback;
-                take();
+                photograph.show();
                 return true;
-            }
-
-
-            public void openFileChooser(ValueCallback<Uri> uploadMsg) {
-                mUploadMessage = uploadMsg;
-                take();
-            }
-
-            public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType) {
-                mUploadMessage = uploadMsg;
-                take();
-            }
-
-            public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture) {
-                mUploadMessage = uploadMsg;
-                take();
             }
         });
     }
 
-    private void take() {
-        File imageStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyApp");
-        // Create the storage directory if it does not exist
-        if (!imageStorageDir.exists()) {
-            imageStorageDir.mkdirs();
-        }
-        File file = new File(imageStorageDir + File.separator + "IMG_" + String.valueOf(System.currentTimeMillis()) + ".jpg");
-        imageUri = Uri.fromFile(file);
-        final List<Intent> cameraIntents = new ArrayList<Intent>();
-        final Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        final PackageManager packageManager = getPackageManager();
-        final List<ResolveInfo> listCam = packageManager.queryIntentActivities(captureIntent, 0);
-        for (ResolveInfo res : listCam) {
-            final String packageName = res.activityInfo.packageName;
-            final Intent i = new Intent(captureIntent);
-            i.setComponent(new ComponentName(res.activityInfo.packageName, res.activityInfo.name));
-            i.setPackage(packageName);
-            i.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-            cameraIntents.add(i);
-
-        }
-        Intent i = new Intent(Intent.ACTION_GET_CONTENT);//相册
-//        i.addCategory(Intent.CATEGORY_OPENABLE);
-//        i.setType("image/*");
-        Intent chooserIntent = Intent.createChooser(i, "Image Chooser");
-        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, cameraIntents.toArray(new Parcelable[]{}));
-        MainActivity.this.startActivityForResult(chooserIntent, FILECHOOSER_RESULTCODE);
-    }
-
-    @Override
-    public void initData() {
-
-    }
-
-    @Override
-    public void requestData() {
-
-    }
-
-    @Override
-    public void updateUI() {
-
-    }
-
     @Override
     public void onViewClick(View v) {
-
+        switch (v.getId()) {
+            case R.id.jiazaill:
+                updateUI();
+                break;
+        }
     }
 
     @SuppressLint("NewApi")
@@ -390,14 +441,14 @@ public class MainActivity extends BaseActivity {
     }
 
     @SuppressWarnings("null")
+    Uri[] results = null;
+
     @android.support.annotation.RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     private void onActivityResultAboveL(int requestCode, int resultCode, Intent data) {
         if (requestCode != FILECHOOSER_RESULTCODE
                 || mUploadCallbackAboveL == null) {
             return;
         }
-
-        Uri[] results = null;
 
         if (resultCode == Activity.RESULT_OK) {
 
@@ -420,15 +471,17 @@ public class MainActivity extends BaseActivity {
                     results = new Uri[]{Uri.parse(dataString)};
             }
         }
-        if (results != null) {
-            mUploadCallbackAboveL.onReceiveValue(results);
-            mUploadCallbackAboveL = null;
-        } else {
-            results = new Uri[]{imageUri};
-            mUploadCallbackAboveL.onReceiveValue(results);
-            mUploadCallbackAboveL = null;
+        try {
+            if (results != null) {
+                mUploadCallbackAboveL.onReceiveValue(results);
+                mUploadCallbackAboveL = null;
+            } else {
+                results = new Uri[]{imageUri};
+                mUploadCallbackAboveL.onReceiveValue(results);
+                mUploadCallbackAboveL = null;
+            }
+        } catch (Exception e) {
         }
-
         return;
     }
 
@@ -506,5 +559,20 @@ public class MainActivity extends BaseActivity {
         // 必须异步调用
         Thread payThread = new Thread(payRunnable);
         payThread.start();
+    }
+
+    @Override
+    public void onWebErro() {
+        Debug.e("------------错误");
+        MyToast.show(context, "网络错误！请检查网络后点击刷新！");
+        mWebView.setVisibility(View.GONE);
+        lljiazai.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void LoadSuccess() {
+        Debug.e("------------正确");
+        lljiazai.setVisibility(View.GONE);
+        mWebView.setVisibility(View.VISIBLE);
     }
 }
